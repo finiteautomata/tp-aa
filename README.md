@@ -25,3 +25,9 @@ Esto instala todas las dependencias que estamos usando (Numpy, IPython, Matplotl
 ```
 $ python baseline.py
 ```
+
+o correr directamente el nuestro
+
+```
+$ python main.py
+```
