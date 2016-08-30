@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
@@ -8,8 +9,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.cross_validation import cross_val_score
 
 # Leo los mails (poner los paths correctos).
-ham_txt= json.load(open('data/ham_txt.json'))
-spam_txt= json.load(open('data/spam_txt.json'))
+ham_txt= json.load(open('data/ham_dev.json'))
+spam_txt= json.load(open('data/spam_dev.json'))
 
 # Imprimo un mail de ham y spam como muestra.
 print ham_txt[0]
@@ -38,10 +39,44 @@ def count_spaces(txt):
 	return txt.count(" ")
 df['count_spaces'] = map(count_spaces, df.text)
 # Éste lo agregué yo...subió a 90% :o
-df['has_html'] = map(lambda text: "<html>" in text, df.text)
+
+
+list_of_attributes = ['len', 'count_spaces']
+
+def add_word_attribute(df, word, column_name=None, lower=False):
+	"""
+	Agrega una columna al dataframe df que consiste en ver si word esta presente en la columna df.text
+
+	Atributos:
+
+	- df: dataset de Pandas
+	- word: palabra a buscar en el texto
+	- column_name: Opcional. Nombre de la columna a crear en el dataframe 
+	- lower: Busco case insensitive (False por defecto) 
+	"""
+
+	global list_of_attributes
+
+	column_name = column_name or ("has_" + word)
+	list_of_attributes += [column_name]
+	def fun(text):
+		if lower:
+			return word in text.lower() 
+		else:
+			return word in text
+
+	df[column_name] = map(fun, df.text)
+
+
+add_word_attribute(df, "<html>", "has_html")
+add_word_attribute(df, "Original Message", "has_original_message")
+add_word_attribute(df, "free", lower=True)
+add_word_attribute(df, "gif")
+add_word_attribute(df, "help")
+add_word_attribute(df, "http")
 
 # Preparo data para clasificar
-X = df[['len', 'count_spaces', 'has_html']].values
+X = df[list_of_attributes].values
 y = df['class']
 
 # Elijo mi clasificador.
