@@ -9,6 +9,18 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.cross_validation import cross_val_score
 
+
+# Los siguientes cuatro imports los agregamos para poder graficar los arboles generados...
+from sklearn.externals.six import StringIO  
+import pydot 
+from sklearn import tree
+from IPython.display import Image  
+
+#import numpy as np
+from collections import Counter
+import pylab
+
+
 # Leo los mails (poner los paths correctos).
 ham_txt= json.load(open('data/ham_dev.json'))
 spam_txt= json.load(open('data/spam_dev.json'))
@@ -37,6 +49,7 @@ df['count_spaces'] = map(count_spaces, df.text)
 
 
 list_of_attributes = ['len', 'count_spaces']
+
 
 def add_attribute(df, fun, column_name):
     """
@@ -82,6 +95,7 @@ def add_word_attribute(df, word, column_name=None, lower=False):
 add_word_attribute(df, "<html>", "has_html")
 add_word_attribute(df, "Original Message", "has_original_message")
 add_word_attribute(df, "free", lower=True)
+
 add_word_attribute(df, "cc:", lower=True)
 
 for word in ["gif", "help", "http", "dollar", "million", "|"]:
@@ -93,10 +107,31 @@ X = df[list_of_attributes].values
 y = df['class']
 
 # Elijo mi clasificador.
-clf = DecisionTreeClassifier()
+clfWithEntropy = DecisionTreeClassifier( criterion="entropy")
+clfWithGini = DecisionTreeClassifier( criterion="gini")
 
 # Ejecuto el clasificador entrenando con un esquema de cross validation
 # de 10 folds.
-res = cross_val_score(clf, X, y, cv=10)
-print np.mean(res), np.std(res)
+resWithEntropy = cross_val_score(clfWithEntropy, X, y, cv=10)
+resWithGini = cross_val_score(clfWithGini, X, y, cv=10)
+
+print np.mean(resWithEntropy), np.std(resWithEntropy)
+print np.mean(resWithGini), np.std(resWithGini)
 # salida: 0.783040309346 0.0068052434174  (o similar)
+
+#arbolito = clf.fit(X,y)
+
+#dot_data = StringIO() 
+#tree.export_graphviz(arbolito, out_file=dot_data) 
+
+#tree.export_graphviz(arbolito,out_file='tree.dot') 
+
+# Para pasar el .dot a un archivo visualizable  correr alguna de las siguientes lineas
+# $ dot -Tps tree.dot -o tree.ps      (PostScript format)
+# $ dot -Tpng tree.dot -o tree.png    (PNG format)
+
+
+#graph = pydot.graph_from_dot_data(dot_data.getvalue()) 
+#Image(graph.create_png()) 
+
+
