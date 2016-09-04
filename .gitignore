@@ -1,6 +1,7 @@
 ## Esto lo ignoro yo:
 
 data/*
+test/*
 
 ## Esto viene por defecto
 # Byte-compiled / optimized / DLL files
