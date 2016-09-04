@@ -11,18 +11,28 @@ import random
 
 # q es el porcentaje que va a tomar para test
 def split_file(path, q):
+    print("Separando el {}% de {}...".format(q, path))
     base, ext = os.path.splitext(path)
 
     full_data = json.load(open(path))
+
+    print("{} mails.".format(len(full_data)))
+
     test_data = random.sample(full_data, int(q * len(full_data) / 100.0))
     dev_data = [mail for mail in full_data if mail not in test_data]
 
-    with open(base + '_dev.json', 'w+') as outfile:
+    dev_out_path = base + '_dev.json'
+    test_out_path = base + '_test.json'
+
+    with open(dev_out_path, 'w+') as outfile:
         json.dump(dev_data, outfile)
+        print("{} mails guardados en {}".format(len(dev_data), outfile.name))
 
-    with open(base + '_test.json', 'w+') as outfile:
+    with open(test_out_path, 'w+') as outfile:
         json.dump(test_data, outfile)
+        print("{} mails guardados en {}".format(len(test_data), outfile.name))
 
+    print("===" * 10 + '\n')
 
 if __name__ == '__main__':
     # q es el porcentaje que queremo
@@ -35,6 +45,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     random.seed(args.seed)
+
+    print("Partiendo conjunto de datos.")
+    print("Porcentaje tomado de cada conjunto = {}%".format(args.porcentaje))
+    print("Seed = {}%\n\n\n".format(args.seed))
 
     split_file(os.path.join(args.base_dir, "ham.json"), args.porcentaje)
     split_file(os.path.join(args.base_dir, "spam.json"), args.porcentaje)
