@@ -39,8 +39,13 @@ class DataFrameBuilder(object):
         self.add_word_attribute("<html>", "has_html")
         self.add_word_attribute("Original Message", "has_original_message")
 
-        for word in ["free", "cc:", "gif", "help",
-                     "http", "dollar", "million", "|"]:
+        # este habría que refinarlo un poco
+        self.add_word_attribute("multipart", lower=True)
+
+        for word in ["free", "cc:", "gif", "help", "photo", "video",
+                     "http", "dollar", "million", "|", "sex", "penis",
+                     "vagina", "nigeria", "fuck", "girl", "erect", "million",
+                     "viagra"]:
             self.add_word_attribute(word, lower=True)
 
         return self.df
