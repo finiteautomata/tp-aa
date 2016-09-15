@@ -18,21 +18,19 @@ class DataFrameBuilder(object):
     > df = builder.build()
     """
 
-    def __init__(self, spam, ham):
+    def __init__(self):
         """Constructor."""
-        self.spam = spam
-        self.ham = ham
         self.list_of_attributes = []
 
-    def build(self):
+    def build(self, spam, ham):
         u"""
         Construye el dataframe.
 
         Devuelve el dataframe ya construído
         """
-        klass = ['spam'] * len(self.spam) + ['ham'] * len(self.ham)
+        klass = ['spam'] * len(spam) + ['ham'] * len(ham)
 
-        self.df = pd.DataFrame({'text': self.spam + self.ham, 'class': klass})
+        self.df = pd.DataFrame({'text': spam + ham, 'class': klass})
 
         self.add_attribute(len, 'len')
         self.add_attribute(lambda t: t.count(' '), 'spaces')
