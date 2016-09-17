@@ -40,13 +40,35 @@ class DataFrameBuilder(object):
         # este habría que refinarlo un poco
         self.add_word_attribute("multipart", lower=True)
 
-        for word in ["free", "cc:", "gif", "help", "photo", "video",
-                     "http", "dollar", "million", "|", "sex", "penis",
-                     "vagina", "nigeria", "fuck", "girl", "erect", "million",
-                     "viagra"]:
-            self.add_word_attribute(word, lower=True)
+	greetings = ["dear","Friend","hello"]
+
+	investment = ["$","earn","investment","profit","profits","credit","opportunity","income","cost"]
+
+	promotions = ["promotion","why pay more?","f r e e","click","add"]
+
+	sex = ["meet singles","viagra","sex","penis","vagina","pussy","fuck","girl","erect","enlargement"]
+
+	words = ["free", "cc:", "gif", "help", "photo", "video",
+                     "http", "dollar", "million", "|","nigeria", "million","password","of","bill","it's time","sale","hi","-->","weight","lose","administrator","order","clearance","meet singles"]
+
+	categories = [greetings,investment,promotions,sex,word]	
+	
+	for category in categories:
+		self.add_atributes_from(category)
+
+
+#        for word in ["free", "cc:", "gif", "help", "photo", "video", "http", "dollar", "million", "|","nigeria", "million","password","of","bill","it's time","sale","hi","-->","weight","lose","administrator","order","clearance","meet singles"]:
+ #           self.add_word_attribute(word, lower=True)
+	
 
         return self.df
+
+
+    def add_atributes_from(self,anArray):
+
+	for word in anArray:
+		self.add_word_attribute(word,lower=True)
+
 
     def add_attribute(self, fun, column_name):
         """
