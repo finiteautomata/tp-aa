@@ -40,35 +40,36 @@ class DataFrameBuilder(object):
         # este habría que refinarlo un poco
         self.add_word_attribute("multipart", lower=True)
 
-	greetings = ["dear","Friend","hello"]
+        greetings = ["dear", "Friend", "hello"]
 
-	investment = ["$","earn","investment","profit","profits","credit","opportunity","income","cost"]
+        investment = [
+            "$", "earn", "investment", "profit", "profits", "credit",
+            "opportunity", "income", "cost"
+        ]
 
-	promotions = ["promotion","why pay more?","f r e e","click","add"]
+        promotions = ["promotion", "why pay more?", "f r e e", "click", "add"]
 
-	sex = ["meet singles","viagra","sex","penis","vagina","pussy","fuck","girl","erect","enlargement"]
+        sex = [
+            "meet singles", "viagra", "sex", "penis", "vagina", "pussy",
+            "fuck", "girl", "erect", "enlargement"
+        ]
 
-	words = ["free", "cc:", "gif", "help", "photo", "video",
-                     "http", "dollar", "million", "|","nigeria", "million","password","of","bill","it's time","sale","hi","-->","weight","lose","administrator","order","clearance","meet singles"]
+        words = [
+            "free", "cc:", "gif", "help", "photo", "video", "http", "dollar",
+            "million", "|", "nigeria", "million", "password", "of", "bill",
+            "it's time", "sale", "hi", "-->", "weight", "lose",
+            "administrator", "order", "clearance", "meet singles"]
 
-	categories = [greetings,investment,promotions,sex,word]	
-	
-	for category in categories:
-		self.add_atributes_from(category)
+        categories = [greetings, investment, promotions, sex, words]
 
-
-#        for word in ["free", "cc:", "gif", "help", "photo", "video", "http", "dollar", "million", "|","nigeria", "million","password","of","bill","it's time","sale","hi","-->","weight","lose","administrator","order","clearance","meet singles"]:
- #           self.add_word_attribute(word, lower=True)
-	
+        for category in categories:
+            self.add_atributes_from(category)
 
         return self.df
 
-
-    def add_atributes_from(self,anArray):
-
-	for word in anArray:
-		self.add_word_attribute(word,lower=True)
-
+    def add_atributes_from(self, an_array):
+        for word in an_array:
+            self.add_word_attribute(word, lower=True)
 
     def add_attribute(self, fun, column_name):
         """
