@@ -58,7 +58,8 @@ class DataFrameBuilder(object):
             "free", "cc:", "gif", "help", "photo", "video", "http", "dollar",
             "million", "|", "nigeria", "million", "password", "of", "bill",
             "it's time", "sale", "hi", "-->", "weight", "lose",
-            "administrator", "order", "clearance", "meet singles"]
+            "administrator", "order", "clearance", "meet singles"
+        ]
 
         categories = [greetings, investment, promotions, sex, words]
 
