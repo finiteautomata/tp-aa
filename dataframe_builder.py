@@ -66,6 +66,9 @@ class DataFrameBuilder(object):
         for category in categories:
             self.add_atributes_from(category)
 
+        # Saco text porque pesa MUCHO
+        self.df.drop('text', axis=1, inplace=True)
+
         return self.df
 
     def add_atributes_from(self, an_array):
