@@ -28,6 +28,15 @@ class DataFrameBuilder(object):
 
         Devuelve el dataframe ya construído
         """
+        try:
+            self.df = pd.read_pickle('data_frame.pickle')
+        except:
+            self.build_from_scratch(spam, ham)
+
+        return self.df
+
+    def build_from_scratch(self, spam, ham):
+        u"""Construye el dataframe desde 0."""
         klass = ['spam'] * len(spam) + ['ham'] * len(ham)
 
         self.df = pd.DataFrame({'text': spam + ham, 'class': klass})
@@ -69,7 +78,8 @@ class DataFrameBuilder(object):
         # Saco text porque pesa MUCHO
         self.df.drop('text', axis=1, inplace=True)
 
-        return self.df
+        self.df.to_pickle('data_frame.pickle')
+
 
     def add_atributes_from(self, an_array):
         for word in an_array:
