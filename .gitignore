@@ -8,6 +8,7 @@ test/*
 __pycache__/
 *.py[cod]
 *$py.class
+*.pickle
 
 
 # Distribution / packaging
