@@ -1,29 +1,34 @@
+#! coding: utf-8
+"""Tests para DataframeBuilder."""
 import unittest
-
+import numpy as np
 from dataframe_builder import DataFrameBuilder
 
 
 class DataframeBuilderTest(unittest.TestCase):
-    def test_it_returns_a_dataframe_with_text_column(self):
-        builder = DataFrameBuilder()
-
-        dataframe = builder.build(spam=['spam1'], ham=['ham1'])
-
-        self.assertItemsEqual(dataframe.text, ['spam1', 'ham1'])
+    """Tests para DataframeBuilder."""
 
     def test_it_sets_class_properly(self):
-        builder = DataFrameBuilder()
+        builder = DataFrameBuilder(cache=False)
 
-        df = builder.build(spam=['bad', 'bad'], ham=['ham1'])
+        df = builder.build_from_scratch(spam=['bad', 'bad'], ham=['ham1'])
 
-        self.assertItemsEqual(df[df.text == "bad"]['class'], ['spam', 'spam'])
+        self.assertEqual(np.count_nonzero(df['class'] == 'spam'), 2)
 
     def test_it_adds_len_column(self):
-        builder = DataFrameBuilder()
+        builder = DataFrameBuilder(cache=False)
 
-        df = builder.build(spam=[], ham=['this is a mail'])
+        df = builder.build_from_scratch(spam=[], ham=['this is a mail'])
 
-        self.assertEqual(df.loc[0, 'len'], len(df.loc[0, 'text']))
+        self.assertEqual(df.loc[0, 'len'], len('this is a mail'))
+
+    def test_it_returns_something_answering_design_matrix(self):
+        builder = DataFrameBuilder(cache=False)
+
+        df = builder.build_from_scratch(spam=[], ham=['this is a mail'])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

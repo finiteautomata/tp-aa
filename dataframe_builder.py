@@ -3,7 +3,10 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
+import config
 import pandas as pd
+import json
+from dataframe_decorator import DataframeDecorator
 
 
 class DataFrameBuilder(object):
@@ -18,22 +21,37 @@ class DataFrameBuilder(object):
     > df = builder.build()
     """
 
-    def __init__(self):
+    def __init__(self, cache=True):
         """Constructor."""
         self.list_of_attributes = []
+        self.cache = cache
 
-    def build(self, spam, ham):
+    def build(self,
+              spam_path=config.spam_dev_path, ham_path=config.ham_dev_path):
         u"""
         Construye el dataframe.
 
-        Devuelve el dataframe ya construído
+        Argumentos:
+
+        - spam: lista de mails spam
+        - ham: lista de mails ham
+        - cache: intenta usar pickle
         """
-        try:
-            self.df = pd.read_pickle('data_frame.pickle')
-        except:
+        self.df = None
+
+        if self.cache:
+            try:
+                self.df = pd.read_pickle(config.dataframe_path)
+            except:
+                pass
+
+        if self.df is None:
+            spam = json.load(open(config.spam_dev_path))
+            ham = json.load(open(config.ham_dev_path))
+
             self.build_from_scratch(spam, ham)
 
-        return self.df
+        return DataframeDecorator(self.df)
 
     def build_from_scratch(self, spam, ham):
         u"""Construye el dataframe desde 0."""
@@ -78,10 +96,13 @@ class DataFrameBuilder(object):
         # Saco text porque pesa MUCHO
         self.df.drop('text', axis=1, inplace=True)
 
-        self.df.to_pickle('data_frame.pickle')
+        if self.cache:
+            self.df.to_pickle(config.dataframe_path)
 
+        return self.df
 
     def add_atributes_from(self, an_array):
+        """Agrega los word attributes para cada elemento del array."""
         for word in an_array:
             self.add_word_attribute(word, lower=True)
 
