@@ -3,10 +3,27 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
-import config
+import email
 import pandas as pd
 import json
+import config
 from dataframe_decorator import DataframeDecorator
+
+
+def load_dev_dataframe(**kwargs):
+    """Carga el dataframe de dev."""
+    builder = DataFrameBuilder(**kwargs)
+    return builder.build()
+
+
+def load_test_dataframe(**kwargs):
+    """Carga el dataframe de test."""
+    builder = DataFrameBuilder(**kwargs)
+
+    return builder.build(
+        spam_path=config.spam_test_path,
+        ham_path=config.ham_test_path
+    )
 
 
 class DataFrameBuilder(object):
@@ -21,10 +38,12 @@ class DataFrameBuilder(object):
     > df = builder.build()
     """
 
-    def __init__(self, cache=True, dataframe_path=config.dev_dataframe_path):
+    def __init__(self, cache=True, delete_text=True,
+                 dataframe_path=config.dev_dataframe_path):
         """Constructor."""
         self.list_of_attributes = []
         self.cache = cache
+        self.delete_text = delete_text
         self.dataframe_path = dataframe_path
 
     def build(self,
@@ -62,7 +81,15 @@ class DataFrameBuilder(object):
         u"""Construye el dataframe desde 0."""
         klass = ['spam'] * len(spam) + ['ham'] * len(ham)
 
+        parser = email.parser.Parser()
+
+        self.columns_to_be_removed = ['text', 'parsed_text']
+
         self.df = pd.DataFrame({'text': spam + ham, 'class': klass})
+        self.df.parsed_text = self.df.text.apply(
+            lambda t: parser.parsestr(t.encode('utf-8')))
+
+        self.add_content_type_columns()
 
         self.add_attribute(len, 'len')
         self.add_attribute(lambda t: t.count(' '), 'spaces')
@@ -70,7 +97,6 @@ class DataFrameBuilder(object):
         self.add_word_attribute("Original Message", "has_original_message")
 
         # este habría que refinarlo un poco
-        self.add_word_attribute("multipart", lower=True)
 
         greetings = ["dear", "friend", "hello"]
 
@@ -98,8 +124,10 @@ class DataFrameBuilder(object):
         for category in categories:
             self.add_atributes_from(category)
 
-        # Saco text porque pesa MUCHO
-        self.df.drop('text', axis=1, inplace=True)
+        if self.delete_text:
+            # Saco text porque pesa MUCHO
+            for column in self.columns_to_be_removed:
+                self.df.drop(column, axis=1, inplace=True)
 
         if self.cache:
             self.df.to_pickle(self.dataframe_path)
@@ -112,6 +140,23 @@ class DataFrameBuilder(object):
         """Agrega los word attributes para cada elemento del array."""
         for word in an_array:
             self.add_word_attribute(word, lower=True)
+
+    def add_content_type_columns(self):
+        """Agrego todas las columnas relacionadas a content type."""
+        content_type = self.df.parsed_text.apply(
+            lambda t: t.get_content_type())
+
+        types = [
+            'multipart/mixed', 'text/html', 'multipart/alternative',
+            'text/plain', 'multipart/related', 'multipart/report',
+            'text/plain charset="us-ascii"', 'text/html charset=iso-8859-1',
+            'application/vnd.ms-excel', 'message/rfc822', 'text/enriched',
+            'text/richtext', 'image/pjpeg', 'application/msword',
+            'application/octet-stream']
+
+        for ctype in types:
+            self.df[ctype] = content_type.apply(
+                lambda t: ctype in t)
 
     def add_attribute(self, fun, column_name):
         """
