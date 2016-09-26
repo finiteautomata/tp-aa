@@ -21,10 +21,11 @@ class DataFrameBuilder(object):
     > df = builder.build()
     """
 
-    def __init__(self, cache=True):
+    def __init__(self, cache=True, dataframe_path=config.dev_dataframe_path):
         """Constructor."""
         self.list_of_attributes = []
         self.cache = cache
+        self.dataframe_path = dataframe_path
 
     def build(self,
               spam_path=config.spam_dev_path, ham_path=config.ham_dev_path):
@@ -41,13 +42,17 @@ class DataFrameBuilder(object):
 
         if self.cache:
             try:
-                self.df = pd.read_pickle(config.dataframe_path)
+                print "Buscando dataframe en {}".format(self.dataframe_path)
+                self.df = pd.read_pickle(self.dataframe_path)
+                print "Encontrado. Dimensiones: {}".format(self.df.shape)
             except:
+
                 pass
 
         if self.df is None:
-            spam = json.load(open(config.spam_dev_path))
-            ham = json.load(open(config.ham_dev_path))
+            print "Armando dataframe..."
+            spam = json.load(open(spam_path))
+            ham = json.load(open(ham_path))
 
             self.build_from_scratch(spam, ham)
 
@@ -97,7 +102,9 @@ class DataFrameBuilder(object):
         self.df.drop('text', axis=1, inplace=True)
 
         if self.cache:
-            self.df.to_pickle(config.dataframe_path)
+            self.df.to_pickle(self.dataframe_path)
+            print "Dataframe guardado en {}".format(self.dataframe_path)
+            print "Dimensiones: {}".format(self.df.shape())
 
         return self.df
 
