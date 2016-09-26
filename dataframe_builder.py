@@ -3,10 +3,13 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
+
 import email
+import dateutil
 import pandas as pd
 import json
 import config
+import re
 from dataframe_decorator import DataframeDecorator
 
 
@@ -63,6 +66,7 @@ class DataFrameBuilder(object):
         - cache: intenta usar pickle
         """
         self.df = None
+        self.columns_to_remove = ['text']
 
         if self.cache:
             try:
@@ -79,6 +83,19 @@ class DataFrameBuilder(object):
             ham = json.load(open(ham_path))
 
             self.build_from_scratch(spam, ham)
+
+        if self.delete_text:
+            # Saco text porque pesa MUCHO
+            del self.df.parsed_text
+            for column in self.columns_to_remove:
+                self.df.drop(column, axis=1, inplace=True)
+
+        print "Dataframe construído"
+        if self.cache:
+            self.df.to_pickle(self.dataframe_path)
+            print "Dataframe guardado en {}".format(self.dataframe_path)
+
+        print "Dimensiones: {}".format(self.df.shape)
 
         return DataframeDecorator(self.df)
 
@@ -127,15 +144,8 @@ class DataFrameBuilder(object):
         for category in categories:
             self.add_atributes_from(category)
 
-        if self.delete_text:
-            # Saco text porque pesa MUCHO
-            del self.df.parsed_text
-            self.df.drop('text', axis=1, inplace=True)
-
-        if self.cache:
-            self.df.to_pickle(self.dataframe_path)
-            print "Dataframe guardado en {}".format(self.dataframe_path)
-            print "Dimensiones: {}".format(self.df.shape)
+        self.add_header_attributes()
+        self.add_date_attributes()
 
         return self.df
 
@@ -195,3 +205,49 @@ class DataFrameBuilder(object):
                 return text.count(word)
 
         self.add_attribute(fun, column_name)
+
+    def add_header_attributes(self):
+        """Agrego variables de header."""
+        self.df['to'] = self.df.parsed_text.apply(
+            lambda p: p.get_all("To") or p.get_all("to") or [])
+        self.df['from'] = self.df.parsed_text.apply(
+            lambda p: p.get_all("From") or p.get_all("from") or [])
+
+        def join_mails(t):
+            return ";".join(t)
+
+        def is_ascii(s):
+            try:
+                s.encode('ascii')
+                return True
+            except UnicodeDecodeError:
+                return False
+
+        self.df['from_text'] = self.df['from'].apply(join_mails)
+        self.df['to_text'] = self.df['to'].apply(join_mails)
+
+        self.df['number_of_receivers'] = self.df['to_text'].apply(
+            lambda t: len(re.findall(r'<.*>', t))
+        )
+        self.df['from_non_ascii'] = self.df['from'].apply(
+            lambda from_list: is_ascii(";".join(from_list))
+        )
+
+        self.columns_to_remove += ['to', 'from', 'to_text', 'from_text']
+
+    def add_date_attributes(self):
+        """Agrega atributos de fecha."""
+        def parse_date(parsed_mail):
+            try:
+                date = parsed_mail.get('Date') or parsed_mail.get('date')
+                return dateutil.parser.parse(date, fuzzy_with_tokens=True)[0]
+            except:
+                return None
+
+        self.df['date'] = self.df.parsed_text.apply(parse_date)
+        self.df['hour'] = self.df.date.apply(lambda t: t.hour if t else None)
+        self.df['hour_between_7_and_20'] = self.df['hour'].apply(
+            lambda h: h >= 7 and h <= 21
+        )
+
+        self.columns_to_remove += ['date']
