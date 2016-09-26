@@ -12,13 +12,18 @@ from dataframe_decorator import DataframeDecorator
 
 def load_dev_dataframe(**kwargs):
     """Carga el dataframe de dev."""
-    builder = DataFrameBuilder(**kwargs)
+    builder = DataFrameBuilder(
+        dataframe_path=config.dev_dataframe_path,
+        **kwargs)
+
     return builder.build()
 
 
 def load_test_dataframe(**kwargs):
     """Carga el dataframe de test."""
-    builder = DataFrameBuilder(**kwargs)
+    builder = DataFrameBuilder(
+        dataframe_path=config.test_dataframe_path,
+        **kwargs)
 
     return builder.build(
         spam_path=config.spam_test_path,
@@ -83,8 +88,6 @@ class DataFrameBuilder(object):
 
         parser = email.parser.Parser()
 
-        self.columns_to_be_removed = ['text', 'parsed_text']
-
         self.df = pd.DataFrame({'text': spam + ham, 'class': klass})
         self.df.parsed_text = self.df.text.apply(
             lambda t: parser.parsestr(t.encode('utf-8')))
@@ -126,13 +129,13 @@ class DataFrameBuilder(object):
 
         if self.delete_text:
             # Saco text porque pesa MUCHO
-            for column in self.columns_to_be_removed:
-                self.df.drop(column, axis=1, inplace=True)
+            del self.df.parsed_text
+            self.df.drop('text', axis=1, inplace=True)
 
         if self.cache:
             self.df.to_pickle(self.dataframe_path)
             print "Dataframe guardado en {}".format(self.dataframe_path)
-            print "Dimensiones: {}".format(self.df.shape())
+            print "Dimensiones: {}".format(self.df.shape)
 
         return self.df
 
