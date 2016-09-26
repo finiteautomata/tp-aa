@@ -5,6 +5,7 @@ from sklearn.grid_search import RandomizedSearchCV
 
 
 def find_best_classifier(df, clf_class,
+                         clf_args={},
                          search_class=RandomizedSearchCV, **kwargs):
     """Busca el mejor clasificador usando grid o randomized search."""
     # Preparo data para clasificar
