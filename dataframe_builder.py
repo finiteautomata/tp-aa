@@ -72,7 +72,7 @@ class DataFrameBuilder(object):
         # este habría que refinarlo un poco
         self.add_word_attribute("multipart", lower=True)
 
-        greetings = ["dear", "Friend", "hello"]
+        greetings = ["dear", "friend", "hello"]
 
         investment = [
             "$", "earn", "investment", "profit", "profits", "credit",
