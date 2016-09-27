@@ -248,9 +248,8 @@ class DataFrameBuilder(object):
                 return None
 
         self.df['date'] = self.df.parsed_text.apply(parse_date)
-        self.df['hour'] = self.df.date.apply(lambda t: t.hour if t else None)
-        self.df['hour_between_7_and_20'] = self.df['hour'].apply(
-            lambda h: h >= 7 and h <= 21
-        )
+        #self.df['hour'] = self.df.date.apply(lambda t: t.hour if t else None)
+        #self.df['hour_between_7_and_20'] = self.df['hour'].apply(
+        #    lambda h: h >= 7 and h <= 21)
 
         self.columns_to_remove += ['date']
