@@ -86,9 +86,12 @@ class DataFrameBuilder(object):
 
         if self.delete_text:
             # Saco text porque pesa MUCHO
-            del self.df.parsed_text
-            for column in self.columns_to_remove:
-                self.df.drop(column, axis=1, inplace=True)
+            try:
+                del self.df.parsed_text
+                for column in self.columns_to_remove:
+                    self.df.drop(column, axis=1, inplace=True)
+            except :
+                print "trate de borrar pero no pude"
 
         print "Dataframe construído"
         if self.cache:
