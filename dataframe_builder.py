@@ -108,25 +108,10 @@ class DataFrameBuilder(object):
 
     def build_raw(self, spam, ham):
         u"""Construye el dataframe con todos los datos."""
-        def get_text_payload(mail):
-            payload = mail.get_payload()
-
-            if type(payload) is str:
-                return payload
-            elif type(payload) is list:
-                return ",".join([get_text_payload(m) for m in payload])
-            else:
-                raise Exception("Tipo de payload ni string ni lista")
-
         klass = ['spam'] * len(spam) + ['ham'] * len(ham)
-
-        parser = email.parser.Parser()
-
         self.df = pd.DataFrame({'text': spam + ham, 'class': klass})
-        self.df.parsed_text = self.df.text.apply(
-            lambda t: parser.parsestr(t.encode('utf-8')))
 
-        self.df.payload = self.df.parsed_text.apply(get_text_payload)
+        self.add_text_and_payload()
 
         self.add_content_type_columns()
 
@@ -134,8 +119,6 @@ class DataFrameBuilder(object):
         self.add_attribute(lambda t: t.count(' '), 'spaces')
         self.add_word_attribute("<html>", "has_html")
         self.add_word_attribute("Original Message", "has_original_message")
-
-        # este habría que refinarlo un poco
 
         greetings = ["dear", "friend", "hello"]
 
@@ -167,6 +150,25 @@ class DataFrameBuilder(object):
         self.add_date_attributes()
 
         return self.df
+
+    def add_text_and_payload(self):
+        """Agrego text y payload al df."""
+        def get_text_payload(mail):
+            payload = mail.get_payload()
+
+            if type(payload) is str:
+                return payload
+            elif type(payload) is list:
+                return ",".join([get_text_payload(m) for m in payload])
+            else:
+                raise Exception("Tipo de payload ni string ni lista")
+
+        parser = email.parser.Parser()
+
+        self.df.parsed_text = self.df.text.apply(
+            lambda t: parser.parsestr(t.encode('utf-8')))
+
+        self.df.payload = self.df.parsed_text.apply(get_text_payload)
 
     def add_atributes_from(self, an_array):
         """Agrega los word attributes para cada elemento del array."""

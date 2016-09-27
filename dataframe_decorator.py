@@ -23,13 +23,7 @@ class DataframeDecorator(object):
 
     @property
     def design_matrix(self):
-        """Devuelve la matriz de las variables dependientes (X)."""
-        columns = self.dataframe.columns
-        attributes = columns[columns != 'class']
-
-        matrix = self.dataframe[attributes].values
-
-        return matrix
+        return self.dataframe._get_numeric_data().values
 
     @property
     def outcomes(self):
