@@ -3,7 +3,7 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
-
+import random
 import email
 import dateutil
 import pandas as pd
@@ -84,19 +84,18 @@ class DataFrameBuilder(object):
 
             self.build_from_scratch(spam, ham)
 
-        if self.delete_text:
-            # Saco text porque pesa MUCHO
-            try:
-                del self.df.parsed_text
-                for column in self.columns_to_remove:
-                    self.df.drop(column, axis=1, inplace=True)
-            except :
-                print "trate de borrar pero no pude"
-
-        print "Dataframe construído"
-        if self.cache:
-            self.df.to_pickle(self.dataframe_path)
-            print "Dataframe guardado en {}".format(self.dataframe_path)
+            if self.delete_text:
+                # Saco text porque pesa MUCHO
+                try:
+                    del self.df.parsed_text
+                    for column in self.columns_to_remove:
+                        self.df.drop(column, axis=1, inplace=True)
+                except:
+                    print "Problema destruyendo columnas innecesarias"
+            print "Dataframe construído"
+            if self.cache:
+                self.df.to_pickle(self.dataframe_path)
+                print "Dataframe guardado en {}".format(self.dataframe_path)
 
         print "Dimensiones: {}".format(self.df.shape)
 
@@ -239,7 +238,14 @@ class DataFrameBuilder(object):
         self.columns_to_remove += ['to', 'from', 'to_text', 'from_text']
 
     def add_date_attributes(self):
-        """Agrega atributos de fecha."""
+        """Agrega atributos de fecha.
+
+        OBS: Hay muchos mails sin fechas, ergo sin atributos como hora, etc
+
+        Para esos casos, metemos valores random. No es lo mejor, lo sabemos
+        pero no pudimos hacer andar el Imputer
+
+        """
         def parse_date(parsed_mail):
             try:
                 date = parsed_mail.get('Date') or parsed_mail.get('date')
@@ -247,10 +253,34 @@ class DataFrameBuilder(object):
             except:
                 return None
 
+        def get_hour(date):
+            if date:
+                return date.hour + date.minute / 60.0
+            else:
+                return random.uniform(0, 24)
+
+        def get_weekday(date):
+            if date:
+                return date.weekday()
+            else:
+                return random.choice(range(6))
+
+        def get_year(date):
+            if date:
+                return date.year
+            else:
+                return random.choice(range(1999, 2010))
+
         self.df['date'] = self.df.parsed_text.apply(parse_date)
-        self.df['hour'] = self.df.date.apply(lambda t: t.hour if t else None)
+        self.df['hour'] = self.df.date.apply(get_hour)
         self.df['hour_between_7_and_20'] = self.df['hour'].apply(
-            lambda h: h >= 7 and h <= 21
+            lambda h: h >= 6 and h <= 21
+        )
+        self.df['weekday'] = self.df.date.apply(get_weekday)
+        self.df['is_weekend'] = self.df['weekday'] >= 5
+        self.df['year'] = self.df.date.apply(get_year)
+        self.df['suspicious_year'] = self.df.year.apply(
+            lambda y: y >= 2015 or y <= 1995
         )
 
         self.columns_to_remove += ['date']
