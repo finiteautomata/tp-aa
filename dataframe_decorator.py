@@ -25,15 +25,18 @@ class DataframeDecorator(object):
     def design_matrix(self):
         """Devuelve la matriz de las variables dependientes (X)."""
         columns = self.dataframe.columns
-
         attributes = columns[columns != 'class']
 
-        return self.dataframe[attributes]
+        matrix = self.dataframe[attributes].values
+
+        return matrix
 
     @property
     def outcomes(self):
         """Devuelve el vector de las predicciones (Y)."""
-        return self.dataframe['class'] == 'spam'
+        target = (self.dataframe['class'] == 'spam')
+
+        return target
 
     def __getattr__(self, name):
         u"""Implementa el método decorador."""
