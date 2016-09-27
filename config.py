@@ -24,4 +24,7 @@ spam_dev_path = os.path.join(data_dir, "spam_dev.json")
 spam_test_path = os.path.join(data_dir, "spam_test.json")
 
 dev_dataframe_path = os.path.join(cache_dir, "dataframe.pickle")
+dev_tdidf_path = os.path.join(cache_dir, "tdidf.pickle")
+
 test_dataframe_path = os.path.join(cache_dir, "dataframe.test.pickle")
+test_tdidf_path = os.path.join(cache_dir, "tdidf.test.pickle")

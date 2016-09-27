@@ -10,6 +10,8 @@ import pandas as pd
 import json
 import config
 import re
+from sklearn.externals import joblib
+from sklearn.feature_extraction.text import TfidfVectorizer
 from dataframe_decorator import DataframeDecorator
 
 
@@ -17,6 +19,7 @@ def load_dev_dataframe(**kwargs):
     """Carga el dataframe de dev."""
     builder = DataFrameBuilder(
         dataframe_path=config.dev_dataframe_path,
+        tdidf_path=config.dev_tdidf_path,
         **kwargs)
 
     return builder.build()
@@ -26,6 +29,7 @@ def load_test_dataframe(**kwargs):
     """Carga el dataframe de test."""
     builder = DataFrameBuilder(
         dataframe_path=config.test_dataframe_path,
+        tdidf_path=config.test_tdidf_path,
         **kwargs)
 
     return builder.build(
@@ -47,12 +51,14 @@ class DataFrameBuilder(object):
     """
 
     def __init__(self, cache=True, delete_text=True,
-                 dataframe_path=config.dev_dataframe_path):
+                 dataframe_path=config.dev_dataframe_path,
+                 tdidf_path=config.dev_tdidf_path):
         """Constructor."""
         self.list_of_attributes = []
         self.cache = cache
         self.delete_text = delete_text
         self.dataframe_path = dataframe_path
+        self.tdidf_path = tdidf_path
 
     def build(self,
               spam_path=config.spam_dev_path, ham_path=config.ham_dev_path):
@@ -65,7 +71,7 @@ class DataFrameBuilder(object):
         - ham: lista de mails ham
         - cache: intenta usar pickle
         """
-        self.df = None
+        self.df = self.freq_matrix = None
         self.columns_to_remove = ['text']
 
         if self.cache:
@@ -73,15 +79,18 @@ class DataFrameBuilder(object):
                 print "Buscando dataframe en {}".format(self.dataframe_path)
                 self.df = pd.read_pickle(self.dataframe_path)
                 print "Encontrado. Dimensiones: {}".format(self.df.shape)
+                print "Buscando matriz tdidf en {}".format(self.tdidf_path)
+                self.freq_matrix = joblib.load(self.tdidf_path)
+                print "Encontrado. Dimensiones: {}".format(
+                    self.freq_matrix.shape)
             except:
+                print "Hubo un error cargando los datos"
                 pass
 
-        if self.df is None:
+        if self.df is None or self.freq_matrix is None:
             self.build_from_scratch(spam_path=spam_path, ham_path=ham_path)
 
-        print "Dimensiones: {}".format(self.df.shape)
-
-        return DataframeDecorator(self.df)
+        return DataframeDecorator(self.df, self.freq_matrix)
 
     def build_from_scratch(self, spam_path, ham_path):
         u"""Construye el dataframe desde 0."""
@@ -90,21 +99,36 @@ class DataFrameBuilder(object):
         ham = json.load(open(ham_path))
 
         self.build_raw(spam, ham)
+        print "Dataframe construído"
+        print "Armando matriz de frecuencias..."
+        self.build_frequency_matrix()
+        print "Construída"
 
         if self.delete_text:
-            # Saco text porque pesa MUCHO
-            try:
-                del self.df.parsed_text
-                del self.df.payload
-                for column in self.columns_to_remove:
-                    self.df.drop(column, axis=1, inplace=True)
-            except:
-                print "Problema destruyendo columnas innecesarias"
+            self.delete_columns()
 
-        print "Dataframe construído"
         if self.cache:
             self.df.to_pickle(self.dataframe_path)
             print "Dataframe guardado en {}".format(self.dataframe_path)
+            joblib.dump(self.freq_matrix, self.tdidf_path)
+            print "TD-IDF guardado en {}".format(self.tdidf_path)
+
+    def build_frequency_matrix(self):
+        """Construyo matriz de frecuencias con td-idf."""
+        print "Construyendo matriz de frecuencias..."
+        transformer = TfidfVectorizer(max_features=4000)
+        self.freq_matrix = transformer.fit_transform(self.df.payload)
+
+    def delete_columns(self):
+        """Borro columnas innecesarias."""
+        # Saco text porque pesa MUCHO
+        try:
+            del self.df.parsed_text
+            del self.df.payload
+            for column in self.columns_to_remove:
+                self.df.drop(column, axis=1, inplace=True)
+        except:
+            print "Problema destruyendo columnas innecesarias"
 
     def build_raw(self, spam, ham):
         u"""Construye el dataframe con todos los datos."""
