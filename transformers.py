@@ -1,7 +1,9 @@
 #! coding: utf-8
 """Transformers que van agregando los datos al dataframe."""
+import email
+import re
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import FeatureUnion
+from sklearn.pipeline import FeatureUnion, Pipeline
 
 
 class BaseTransformer(BaseEstimator, TransformerMixin):
@@ -58,8 +60,48 @@ class AddWordsTransformer(BaseTransformer):
 
         return df
 
+
+class AddHeaderAttributesTransformer(BaseTransformer):
+    """Agrega atributos del header."""
+
+    def transform(self, df):
+        u"""Aplico transformación."""
+        parser = email.parser.Parser()
+
+        parsed_emails = df['text'].apply(
+            lambda t: parser.parsestr(t.encode('utf-8')))
+
+        receivers = parsed_emails.apply(
+            lambda p: p.get_all("To") or p.get_all("to") or [])
+        sender = parsed_emails.apply(
+            lambda p: p.get_all("From") or p.get_all("from") or [])
+
+        def join_mails(t):
+            return ";".join(t)
+
+        def is_ascii(s):
+            try:
+                s.encode('ascii')
+                return True
+            except UnicodeDecodeError:
+                return False
+
+        to_text = receivers.apply(join_mails)
+        from_text = df['from'] = sender.apply(join_mails)
+
+        df['number_of_receivers'] = to_text.apply(
+            lambda t: len(re.findall(r'<.*>', t))
+        )
+
+        df['from_non_ascii'] = from_text.apply(
+            lambda from_list: not is_ascii(from_list)
+        )
+
+        return df
+
 extractor = FeatureUnion([
     ('len', LenTransformer()),
     ('spaces', SpaceTransformer()),
-    ('words', AddWordsTransformer())
+    ('words', AddWordsTransformer()),
+    ('header', AddHeaderAttributesTransformer()),
 ])
