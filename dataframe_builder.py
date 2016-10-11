@@ -3,7 +3,7 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
-
+import random
 import email
 import dateutil
 import pandas as pd
@@ -74,43 +74,44 @@ class DataFrameBuilder(object):
                 self.df = pd.read_pickle(self.dataframe_path)
                 print "Encontrado. Dimensiones: {}".format(self.df.shape)
             except:
-
                 pass
 
         if self.df is None:
-            print "Armando dataframe..."
-            spam = json.load(open(spam_path))
-            ham = json.load(open(ham_path))
+            self.build_from_scratch(spam_path=spam_path, ham_path=ham_path)
 
-            self.build_from_scratch(spam, ham)
+        print "Dimensiones: {}".format(self.df.shape)
+
+        return DataframeDecorator(self.df)
+
+    def build_from_scratch(self, spam_path, ham_path):
+        u"""Construye el dataframe desde 0."""
+        print "Armando dataframe..."
+        spam = json.load(open(spam_path))
+        ham = json.load(open(ham_path))
+
+        self.build_raw(spam, ham)
 
         if self.delete_text:
             # Saco text porque pesa MUCHO
             try:
                 del self.df.parsed_text
+                del self.df.payload
                 for column in self.columns_to_remove:
                     self.df.drop(column, axis=1, inplace=True)
-            except :
-                print "trate de borrar pero no pude"
+            except:
+                print "Problema destruyendo columnas innecesarias"
 
         print "Dataframe construído"
         if self.cache:
             self.df.to_pickle(self.dataframe_path)
             print "Dataframe guardado en {}".format(self.dataframe_path)
 
-        print "Dimensiones: {}".format(self.df.shape)
-
-        return DataframeDecorator(self.df)
-
-    def build_from_scratch(self, spam, ham):
-        u"""Construye el dataframe desde 0."""
+    def build_raw(self, spam, ham):
+        u"""Construye el dataframe con todos los datos."""
         klass = ['spam'] * len(spam) + ['ham'] * len(ham)
-
-        parser = email.parser.Parser()
-
         self.df = pd.DataFrame({'text': spam + ham, 'class': klass})
-        self.df.parsed_text = self.df.text.apply(
-            lambda t: parser.parsestr(t.encode('utf-8')))
+
+        self.add_text_and_payload()
 
         self.add_content_type_columns()
 
@@ -118,8 +119,6 @@ class DataFrameBuilder(object):
         self.add_attribute(lambda t: t.count(' '), 'spaces')
         self.add_word_attribute("<html>", "has_html")
         self.add_word_attribute("Original Message", "has_original_message")
-
-        # este habría que refinarlo un poco
 
         greetings = ["dear", "friend", "hello"]
 
@@ -151,6 +150,25 @@ class DataFrameBuilder(object):
         self.add_date_attributes()
 
         return self.df
+
+    def add_text_and_payload(self):
+        """Agrego text y payload al df."""
+        def get_text_payload(mail):
+            payload = mail.get_payload()
+
+            if type(payload) is str:
+                return payload
+            elif type(payload) is list:
+                return ",".join([get_text_payload(m) for m in payload])
+            else:
+                raise Exception("Tipo de payload ni string ni lista")
+
+        parser = email.parser.Parser()
+
+        self.df.parsed_text = self.df.text.apply(
+            lambda t: parser.parsestr(t.encode('utf-8')))
+
+        self.df.payload = self.df.parsed_text.apply(get_text_payload)
 
     def add_atributes_from(self, an_array):
         """Agrega los word attributes para cada elemento del array."""
@@ -239,7 +257,14 @@ class DataFrameBuilder(object):
         self.columns_to_remove += ['to', 'from', 'to_text', 'from_text']
 
     def add_date_attributes(self):
-        """Agrega atributos de fecha."""
+        """Agrega atributos de fecha.
+
+        OBS: Hay muchos mails sin fechas, ergo sin atributos como hora, etc
+
+        Para esos casos, metemos valores random. No es lo mejor, lo sabemos
+        pero no pudimos hacer andar el Imputer
+
+        """
         def parse_date(parsed_mail):
             try:
                 date = parsed_mail.get('Date') or parsed_mail.get('date')
@@ -247,10 +272,34 @@ class DataFrameBuilder(object):
             except:
                 return None
 
+        def get_hour(date):
+            if date:
+                return date.hour + date.minute / 60.0
+            else:
+                return random.uniform(0, 24)
+
+        def get_weekday(date):
+            if date:
+                return date.weekday()
+            else:
+                return random.choice(range(6))
+
+        def get_year(date):
+            if date:
+                return date.year
+            else:
+                return random.choice(range(1999, 2010))
+
         self.df['date'] = self.df.parsed_text.apply(parse_date)
-        self.df['hour'] = self.df.date.apply(lambda t: t.hour if t else None)
-        self.df['hour_between_7_and_20'] = self.df['hour'].apply(
-            lambda h: h >= 7 and h <= 21
+        self.df['hour'] = self.df.date.apply(get_hour)
+        self.df['hour_is_normal'] = self.df['hour'].apply(
+            lambda h: h >= 6 and h <= 20
+        )
+        self.df['weekday'] = self.df.date.apply(get_weekday)
+        self.df['is_weekend'] = self.df['weekday'] >= 5
+        self.df['year'] = self.df.date.apply(get_year)
+        self.df['suspicious_year'] = self.df.year.apply(
+            lambda y: y >= 2015 or y <= 1995
         )
 
         self.columns_to_remove += ['date']
