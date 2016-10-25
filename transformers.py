@@ -71,6 +71,8 @@ class AddHeaderAttributesTransformer(BaseTransformer):
         parsed_emails = df['text'].apply(
             lambda t: parser.parsestr(t.encode('utf-8')))
 
+        self.add_content_type_columns(df, parsed_emails)
+
         receivers = parsed_emails.apply(
             lambda p: p.get_all("To") or p.get_all("to") or [])
         sender = parsed_emails.apply(
@@ -98,6 +100,24 @@ class AddHeaderAttributesTransformer(BaseTransformer):
         )
 
         return df
+
+    def add_content_type_columns(self, df, parsed_emails):
+        """Agrego todas las columnas relacionadas a content type."""
+        content_type = parsed_emails.apply(
+            lambda t: t.get_content_type())
+
+        types = [
+            'multipart/mixed', 'text/html', 'multipart/alternative',
+            'text/plain', 'multipart/related', 'multipart/report',
+            'text/plain charset="us-ascii"', 'text/html charset=iso-8859-1',
+            'application/vnd.ms-excel', 'message/rfc822', 'text/enriched',
+            'text/richtext', 'image/pjpeg', 'application/msword',
+            'application/octet-stream']
+
+        for ctype in types:
+            df[ctype] = content_type.apply(
+                lambda t: ctype in t)
+
 
 extractor = FeatureUnion([
     ('len', LenTransformer()),

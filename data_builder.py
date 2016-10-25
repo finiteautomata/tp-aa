@@ -44,6 +44,6 @@ class DataBuilder(object):
         ham = json.load(open(ham_path))
 
         u"""Construye el dataframe con todos los datos."""
-        klass = ['spam'] * len(spam) + ['ham'] * len(ham)
+        target = [True] * len(spam) + [False] * len(ham)
 
-        return pd.DataFrame({'text': spam + ham}), klass
+        return pd.DataFrame({'text': spam + ham}), target
