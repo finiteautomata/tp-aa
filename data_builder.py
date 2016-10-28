@@ -3,6 +3,7 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
+import numpy as np
 import pandas as pd
 import json
 import config
@@ -44,6 +45,7 @@ class DataBuilder(object):
         ham = json.load(open(ham_path))
 
         u"""Construye el dataframe con todos los datos."""
-        target = [True] * len(spam) + [False] * len(ham)
 
-        return pd.DataFrame({'text': spam + ham}), target
+        klass = [True] * len(spam) + [False] * len(ham)
+
+        return pd.DataFrame({'text': spam + ham}), np.array(klass)
