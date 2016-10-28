@@ -1,5 +1,6 @@
 #! coding: utf-8
 """Clase decoradora del dataframe."""
+import scipy
 
 
 class DataframeDecorator(object):
@@ -11,7 +12,7 @@ class DataframeDecorator(object):
     - dependent
     """
 
-    def __init__(self, dataframe):
+    def __init__(self, dataframe, freq_matrix):
         """
         Construye el dataframe.
 
@@ -20,10 +21,17 @@ class DataframeDecorator(object):
         - dataframe: dataframe a ser decorado.
         """
         self.dataframe = dataframe
+        self.freq_matrix = freq_matrix
 
     @property
     def design_matrix(self):
-        return self.dataframe._get_numeric_data().values
+        u"""Devuelve matriz de diseño (variables independientes)."""
+        df_data = self.dataframe._get_numeric_data().values
+
+        return scipy.sparse.hstack([
+            scipy.sparse.csr_matrix(df_data.astype('float64')),
+            self.freq_matrix
+        ])
 
     @property
     def outcomes(self):
