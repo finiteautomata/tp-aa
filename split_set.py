@@ -9,6 +9,13 @@ import json
 import random
 
 
+def save_data(data, path):
+    """Salva datos a un path."""
+    with open(path, 'w+') as outfile:
+        json.dump(data, outfile)
+        print("{} mails guardados en {}".format(len(data), outfile.name))
+
+
 # q es el porcentaje que va a tomar para test
 def split_file(path, q):
     print("Separando el {}% de {}...".format(q, path))
@@ -20,17 +27,12 @@ def split_file(path, q):
 
     test_data = random.sample(full_data, int(q * len(full_data) / 100.0))
     dev_data = [mail for mail in full_data if mail not in test_data]
+    small_dev_data = random.sample(dev_data, len(dev_data) / 10)
 
-    dev_out_path = base + '_dev.json'
-    test_out_path = base + '_test.json'
+    save_data(test_data, base + '_test.json')
+    save_data(dev_data, base + '_dev.json')
+    save_data(small_dev_data, base + '_small_dev.json')
 
-    with open(dev_out_path, 'w+') as outfile:
-        json.dump(dev_data, outfile)
-        print("{} mails guardados en {}".format(len(dev_data), outfile.name))
-
-    with open(test_out_path, 'w+') as outfile:
-        json.dump(test_data, outfile)
-        print("{} mails guardados en {}".format(len(test_data), outfile.name))
 
     print("===" * 10 + '\n')
 

@@ -16,6 +16,16 @@ def load_dev_data(**kwargs):
     return builder.build()
 
 
+def load_small_dev_data(**kwargs):
+    """Carga datos de desarrollo 'de prueba'."""
+    builder = DataBuilder()
+
+    return builder.build(
+        spam_path=config.spam_small_dev_path,
+        ham_path=config.ham_small_dev_path
+    )
+
+
 def load_test_data(**kwargs):
     """Carga el dataframe de test."""
     builder = DataBuilder()

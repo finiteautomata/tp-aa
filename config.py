@@ -18,10 +18,14 @@ cache_dir = os.path.join(root_dir, "cache")
 data_dir = os.path.join(root_dir, "data")
 
 ham_dev_path = os.path.join(data_dir, "ham_dev.json")
-ham_test_path = os.path.join(data_dir, "ham_test.json")
-
 spam_dev_path = os.path.join(data_dir, "spam_dev.json")
+
+ham_small_dev_path = os.path.join(data_dir, "ham_small_dev.json")
+spam_small_dev_path = os.path.join(data_dir, "spam_small_dev.json")
+
+ham_test_path = os.path.join(data_dir, "ham_test.json")
 spam_test_path = os.path.join(data_dir, "spam_test.json")
+
 
 dev_dataframe_path = os.path.join(cache_dir, "dataframe.pickle")
 dev_tdidf_path = os.path.join(cache_dir, "tdidf.pickle")
