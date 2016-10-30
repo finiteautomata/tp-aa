@@ -1,10 +1,10 @@
 #! coding: utf-8
 """Auxiliares varios."""
 
-import pandas as pd
-import config
 from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score, roc_auc_score
-from dataframe_builder import DataFrameBuilder
+import pandas as pd
+from transformers import extractor
+from data_builder import load_test_data
 
 scores = [
     precision_score,
@@ -17,19 +17,16 @@ scores = [
 
 def get_scores(classifier):
     """Calcula scores para el clasificador usando datos de test."""
-    builder = DataFrameBuilder(dataframe_path=config.test_dataframe_path)
-    df_test = builder.build(
-        spam_path=config.spam_test_path,
-        ham_path=config.ham_test_path)
+    df, target = load_test_data()
 
-    X_test = df_test.design_matrix
-    Y_test = df_test.outcomes
-
-    print X_test.shape
+    extractor.fit(df)
+    extractor.transform(df)
+    x_test = df._get_numeric_data().values
+    y_test = target
 
     results = pd.DataFrame(index=[classifier.__class__.__name__])
     for other_scorer in scores:
-        Y_pred = classifier.predict(X_test)
+        y_pred = classifier.predict(x_test)
 
-        results[other_scorer.func_name] = [other_scorer(Y_test, Y_pred)]
+        results[other_scorer.func_name] = [other_scorer(y_test, y_pred)]
     return results
