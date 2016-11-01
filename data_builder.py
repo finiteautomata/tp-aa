@@ -3,6 +3,7 @@
 # Aprendizaje Automatico - DC, FCEN, UBA
 # Segundo cuatrimestre 2016
 
+import email
 import numpy as np
 import pandas as pd
 import json
@@ -46,7 +47,23 @@ class DataBuilder(object):
     > spam_path = 'data/spam_dev.json')
     > builder = DataFrameBuilder()
     > df = builder.build(spam_path=spam, ham_path=ham_path)
+
+    Devuelve un dataframe con columnas:
+
+    text: tiene el texto plano del email
+
     """
+
+    def get_text_payload(self, mail):
+        """Devuelve el cuerpo del mail"""
+        payload = mail.get_payload()
+
+        if type(payload) is str:
+            return payload
+        elif type(payload) is list:
+            return ",".join([self.get_text_payload(m) for m in payload])
+        else:
+            raise Exception("Tipo de payload ni string ni lista")
 
     def build(self,
               spam_path=config.spam_dev_path, ham_path=config.ham_dev_path):
@@ -54,8 +71,15 @@ class DataBuilder(object):
         spam = json.load(open(spam_path))
         ham = json.load(open(ham_path))
 
-        u"""Construye el dataframe con todos los datos."""
-
         klass = [True] * len(spam) + [False] * len(ham)
 
-        return pd.DataFrame({'text': spam + ham}), np.array(klass)
+        parser = email.parser.Parser()
+
+        df = pd.DataFrame({'text': spam + ham})
+        # Agrego mails parseados
+        df.parsed_emails = df['text'].apply(
+            lambda t: parser.parsestr(t.encode('utf-8')))
+        # Agrego cuerpo del email
+        df['payload'] = df.parsed_emails.apply(self.get_text_payload)
+
+        return df, np.array(klass)
