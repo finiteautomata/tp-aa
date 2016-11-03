@@ -2,8 +2,10 @@
 """Transformers que van agregando los datos al dataframe."""
 import email
 import re
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.pipeline import FeatureUnion
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 class BaseTransformer(BaseEstimator, TransformerMixin):
@@ -119,9 +121,37 @@ class AddHeaderAttributesTransformer(BaseTransformer):
                 lambda t: ctype in t)
 
 
+options = {
+    'max_features': 300,
+    'ngram_range': (1, 2),
+    'min_df': 0.001,
+    'max_df': 0.75,
+}
+
+
+class MyTfIdfTransformer(BaseTransformer):
+    """Clase que agrega len al coso este."""
+
+    def fit(self, df, y=None):
+        self.transformer = TfidfVectorizer(**options).fit(df.payload)
+        return self
+
+    def transform(self, df):
+        data = self.transformer.transform(df.payload)
+
+        feature_names = [u'T_' + feature_name for feature_name in
+                         self.transformer.get_feature_names()]
+        new_df = pd.DataFrame(data.toarray(), columns=feature_names)
+
+        df = df.join(new_df)
+
+        return df
+
+
 extractor = FeatureUnion([
     ('len', LenTransformer()),
     ('spaces', SpaceTransformer()),
     ('words', AddWordsTransformer()),
     ('header', AddHeaderAttributesTransformer()),
-])
+    ('tf-idf', MyTfIdfTransformer()),
+], n_jobs=4)
