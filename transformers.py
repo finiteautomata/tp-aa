@@ -19,11 +19,9 @@ class BaseTransformer(BaseEstimator, TransformerMixin):
 class LenTransformer(BaseTransformer):
     """Clase que agrega len al dataframe."""
 
-    def transform(self, data_dict):
+    def transform(self, df):
         u"""Aplica la transformación."""
-        data_dict['len'] = data_dict['text'].apply(lambda t: len(t))
-
-        return data_dict
+        return df['payload'].apply(lambda t: len(t))
 
 
 class SpaceTransformer(BaseTransformer):
@@ -31,11 +29,9 @@ class SpaceTransformer(BaseTransformer):
 
     def transform(self, data_dict):
         u"""Aplica la transformación."""
-        data_dict['spaces'] = data_dict['text'].apply(
+        return data_dict['payload'].apply(
             lambda t: t.count(' ')
         )
-
-        return data_dict
 
 
 class AddWordsTransformer(BaseTransformer):
@@ -129,6 +125,7 @@ options = {
 }
 
 
+
 class MyTfIdfTransformer(BaseTransformer):
     """Clase que agrega len al coso este."""
 
@@ -138,20 +135,13 @@ class MyTfIdfTransformer(BaseTransformer):
 
     def transform(self, df):
         data = self.transformer.transform(df.payload)
-
-        feature_names = [u'T_' + feature_name for feature_name in
-                         self.transformer.get_feature_names()]
-        new_df = pd.DataFrame(data.toarray(), columns=feature_names)
-
-        df = df.join(new_df)
-
-        return df
+        return data
 
 
 extractor = FeatureUnion([
     ('len', LenTransformer()),
     ('spaces', SpaceTransformer()),
-    ('words', AddWordsTransformer()),
-    ('header', AddHeaderAttributesTransformer()),
+    #('words', AddWordsTransformer()),
+    #('header', AddHeaderAttributesTransformer()),
     ('tf-idf', MyTfIdfTransformer()),
-], n_jobs=4)
+])
