@@ -19,17 +19,17 @@ class BaseTransformer(BaseEstimator, TransformerMixin):
 class LenTransformer(BaseTransformer):
     """Clase que agrega len al dataframe."""
 
-    def transform(self, df):
+    def transform(self, data):
         u"""Aplica la transformación."""
-        return df['payload'].apply(lambda t: len(t))
+        return data.apply(lambda t: len(t))
 
 
 class SpaceTransformer(BaseTransformer):
     """Clase que agrega len al coso este."""
 
-    def transform(self, data_dict):
+    def transform(self, data):
         u"""Aplica la transformación."""
-        return data_dict['payload'].apply(
+        return data.apply(
             lambda t: t.count(' ')
         )
 
@@ -143,5 +143,6 @@ extractor = FeatureUnion([
     ('spaces', SpaceTransformer()),
     #('words', AddWordsTransformer()),
     #('header', AddHeaderAttributesTransformer()),
-    ('tf-idf', MyTfIdfTransformer()),
+    #('tf-idf', MyTfIdfTransformer()),
+    ('tf-idf', TfidfVectorizer(**options)),
 ])
