@@ -42,3 +42,9 @@ o correr directamente el nuestro
 ```
 $ python main.py
 ```
+
+## Como correr notebooks desde consola
+
+```
+$ jupyter nbconvert --to notebook --execute mynotebook.ipynb --output mynotebook.ipynb
+```
