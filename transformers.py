@@ -3,6 +3,7 @@
 import email
 import re
 import pandas as pd
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -21,7 +22,7 @@ class LenTransformer(BaseTransformer):
 
     def transform(self, data):
         u"""Aplica la transformación."""
-        return data.apply(lambda t: len(t))
+        return np.array(data.apply(lambda t: len(t))).reshape(-1, 1)
 
 
 class SpaceTransformer(BaseTransformer):
@@ -29,9 +30,9 @@ class SpaceTransformer(BaseTransformer):
 
     def transform(self, data):
         u"""Aplica la transformación."""
-        return data.apply(
+        return np.array(data.apply(
             lambda t: t.count(' ')
-        )
+        )).reshape(-1, 1)
 
 
 class AddWordsTransformer(BaseTransformer):
