@@ -3,7 +3,6 @@
 
 from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score, roc_auc_score
 import pandas as pd
-from transformers import extractor
 from data_builder import load_test_data
 
 scores = [
@@ -15,13 +14,11 @@ scores = [
 ]
 
 
-def get_scores(classifier):
+def get_scores(classifier, extractor):
     """Calcula scores para el clasificador usando datos de test."""
     df, target = load_test_data()
 
-    extractor.fit(df)
-    extractor.transform(df)
-    x_test = df._get_numeric_data().values
+    x_test = extractor.transform(df)
     y_test = target
 
     results = pd.DataFrame(index=[classifier.__class__.__name__])
