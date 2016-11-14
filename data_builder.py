@@ -77,7 +77,7 @@ class DataBuilder(object):
 
         df = pd.DataFrame({'text': spam + ham})
         # Agrego mails parseados
-        df.parsed_emails = df['text'].apply(
+        df['parsed_emails'] = df['text'].apply(
             lambda t: parser.parsestr(t.encode('utf-8')))
         # Agrego cuerpo del email
         df['payload'] = df.parsed_emails.apply(self.get_text_payload)
