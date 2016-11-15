@@ -47,21 +47,28 @@ class DateTransformer(BaseTransformer):
         hours = map(lambda t: t.hour if t else random.choice(range(23)), dates)
         hour_between_7_and_20 = map(lambda h: h >= 7 and h <= 21, hours)
 
-        # df['day_of_month'] = dates.apply(
-        #     lambda d: d.day if d else random.choice(range(29))
-        # )
+        day_of_month = map(
+            lambda d: d.day if d else random.choice(range(29)),
+            dates
+        )
 
-        # df['weekday'] = dates.apply(
-        #     lambda d: d.weekday() if d else random.choice(range(6))
-        # )
+        weekday = map(
+            lambda d: d.weekday() if d else random.choice(range(6)),
+            dates
+        )
 
+        # is_weekend = weekday >= 5
         # df['is_weekend'] = df.weekday >= 5
-
         # df['year'] = dates.apply(
         #     lambda d: d.year if d else random.choice(range(1990, 2005))
         # )
 
-        return np.array([hours, hour_between_7_and_20]).transpose()
+        return np.array([
+            hours,
+            hour_between_7_and_20,
+            day_of_month,
+            weekday
+        ]).transpose()
 
 
 class ParticipantsTransformer(BaseTransformer):
