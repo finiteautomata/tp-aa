@@ -57,17 +57,23 @@ class DateTransformer(BaseTransformer):
             dates
         )
 
-        # is_weekend = weekday >= 5
-        # df['is_weekend'] = df.weekday >= 5
-        # df['year'] = dates.apply(
-        #     lambda d: d.year if d else random.choice(range(1990, 2005))
-        # )
+        is_weekend = map(
+            lambda d: d >= 5,
+            weekday
+        )
+
+        year = map(
+            lambda d: d.year if d else random.choice(range(1990, 2005)),
+            dates
+        )
 
         return np.array([
             hours,
             hour_between_7_and_20,
             day_of_month,
-            weekday
+            weekday,
+            is_weekend,
+            year,
         ]).transpose()
 
 
