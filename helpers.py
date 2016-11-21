@@ -14,6 +14,16 @@ scores = [
 ]
 
 
+def add_prefix(d, prefix):
+    u"""
+    Devuelve nuevo diccionario cuyas claves son las anteriores más `prefix` como prefijo.
+
+    add_prefix({'k1: 1, 'k2': 2}, 'p__')
+    > {'p__k1: 1, 'p__k2': 2}
+    """
+    return dict((prefix + k, v) for (k, v) in d.iteritems())
+
+
 def get_scores(classifier, extractor):
     """Calcula scores para el clasificador usando datos de test."""
     df, target = load_test_data()

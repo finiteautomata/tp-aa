@@ -27,8 +27,10 @@ parsed_mail_transformer = make_union(
     DateTransformer(),
 )
 
+def MyTransformer():
+    return DataFrameMapper([
+        ('payload', payload_transformer),
+        ('parsed_emails', parsed_mail_transformer),
+    ])
 
-transformer = DataFrameMapper([
-    ('payload', payload_transformer),
-    ('parsed_emails', parsed_mail_transformer),
-])
+transformer = MyTransformer()
