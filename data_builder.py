@@ -55,7 +55,7 @@ class DataBuilder(object):
     """
 
     def get_text_payload(self, mail):
-        """Devuelve el cuerpo del mail"""
+        """Devuelve el cuerpo del mail."""
         payload = mail.get_payload()
 
         if type(payload) is str:
@@ -75,10 +75,12 @@ class DataBuilder(object):
 
         parser = email.parser.Parser()
 
-        df = pd.DataFrame({'text': spam + ham})
-        # Agrego mails parseados
-        df['parsed_emails'] = df['text'].apply(
-            lambda t: parser.parsestr(t.encode('utf-8')))
+        text = spam + ham
+
+        df = pd.DataFrame({
+            'parsed_emails': [parser.parsestr(t.encode('utf-8')) for t in text]
+        })
+
         # Agrego cuerpo del email
         df['payload'] = df.parsed_emails.apply(self.get_text_payload)
 
