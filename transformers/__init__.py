@@ -7,8 +7,8 @@ from .payload import SpaceTransformer, LenTransformer, AddWordsTransformer
 from .header import ContentTypeTransformer, ParticipantsTransformer, DateTransformer
 
 options = {
-    'max_features': 100,
-    'ngram_range': (1, 1),
+    'max_features': 200,
+    'ngram_range': (1, 2),
     'min_df': 0.001,
     'max_df': 0.75,
 }
@@ -26,6 +26,7 @@ parsed_mail_transformer = make_union(
     ParticipantsTransformer(),
     DateTransformer(),
 )
+
 
 def MyTransformer():
     return DataFrameMapper([
